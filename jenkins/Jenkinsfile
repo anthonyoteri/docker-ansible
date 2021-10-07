@@ -1,0 +1,33 @@
+pipeline {
+    agent {
+        kubernetes {
+            yamlFile 'jenkins/podTemplate.yaml'
+            defaultContainer 'docker'
+        }
+    }
+
+    options {
+        ansiColor('xterm')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/anthonyoteri/docker-ansible'
+            }
+        }
+       
+        stage('Build') {
+	    steps {
+	        sh 'docker build --network=host -t docker-ansible .'
+            }
+	}
+    }
+
+    post {
+        success {
+	    sh "docker tag docker-ansible:latest registry.anthonyoteri.com/docker-ansible:latest"
+	    sh "docker push registry.anthonyoteri.com/docker-ansible:latest"
+        }
+    }
+}
